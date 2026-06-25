@@ -1,0 +1,2297 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Smart Packing - Day 18 Unified Prototype Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-gradient: radial-gradient(circle at 50% 50%, #0d0a1b 0%, #050308 100%);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.07);
+            --glass-accent: rgba(0, 229, 255, 0.12);
+            --primary: #00e5ff;
+            --primary-glow: rgba(0, 229, 255, 0.25);
+            --secondary: #9c27b0;
+            --text-main: #f5f5f7;
+            --text-muted: #8e8e93;
+            --card-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5);
+            --success: #00e676;
+            --warning: #ffea00;
+            --danger: #ff1744;
+            --danger-glow: rgba(255, 23, 68, 0.3);
+            
+            /* Tag Colors for Feedback */
+            --tag-user-exp: #ff9100;
+            --tag-user-imp: #2979ff;
+            --tag-sys-exp: #00e676;
+            --tag-sys-imp: #d500f9;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        /* --- DASHBOARD HEADER --- */
+        .db-header {
+            background: rgba(13, 10, 27, 0.8);
+            border-bottom: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .db-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .db-logo span {
+            color: var(--text-main);
+            font-weight: 400;
+            font-size: 14px;
+            padding-left: 10px;
+            border-left: 1px solid var(--glass-border);
+        }
+
+        .tab-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            padding: 10px 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 13.5px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .nav-btn:hover {
+            border-color: var(--primary);
+            color: var(--text-main);
+            background: rgba(0, 229, 255, 0.05);
+        }
+
+        .nav-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #000;
+            box-shadow: 0 4px 15px var(--primary-glow);
+        }
+
+        /* --- DASHBOARD MAIN CONTENT --- */
+        .db-main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .proto-section {
+            display: none;
+            width: 100%;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .proto-section.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- SHARED MOBILE FRAME MOCKUP --- */
+        .phone-frame {
+            width: 375px;
+            height: 720px;
+            background: rgba(10, 5, 20, 0.85);
+            border: 8px solid rgba(255, 255, 255, 0.08);
+            border-radius: 40px;
+            box-shadow: var(--card-shadow), inset 0 0 20px rgba(0, 0, 0, 0.6);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(25px);
+        }
+
+        .status-bar {
+            height: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 24px;
+            font-size: 12px;
+            color: var(--text-muted);
+            z-index: 10;
+        }
+
+        .status-bar .right-icons {
+            display: flex;
+            gap: 6px;
+        }
+
+        .screen-container {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 24px;
+            overflow: hidden;
+        }
+
+        .screen {
+            position: absolute;
+            top: 20px;
+            left: 24px;
+            right: 24px;
+            bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .screen.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        /* Shared Components */
+        h1 {
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #ffffff 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 13.5px;
+            line-height: 1.5;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 16px;
+            margin-bottom: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .glass-card-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--primary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .glass-card ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .glass-card li {
+            font-size: 12px;
+            line-height: 1.4;
+            color: var(--text-main);
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
+        .glass-card li::before {
+            content: "✦";
+            color: var(--primary);
+        }
+
+        /* Buttons */
+        .btn-container {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, #00b0ff 100%);
+            border: none;
+            border-radius: 16px;
+            padding: 13px;
+            color: #000;
+            font-weight: 700;
+            font-size: 14.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--primary-glow);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--primary-glow);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--glass-accent);
+            box-shadow: none;
+        }
+
+        /* Toast Feedback */
+        .toast {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0, 230, 118, 0.95);
+            color: #000;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 11.5px;
+            font-weight: 600;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 230, 118, 0.3);
+            z-index: 2000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+
+        /* ========================================================
+           1. ONBOARDING SPECIFIC STYLES
+           ======================================================== */
+        #section-onboarding .toggle-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 14px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+
+        #section-onboarding .toggle-item:hover {
+            border-color: var(--glass-accent);
+        }
+
+        #section-onboarding .toggle-info {
+            max-width: 75%;
+        }
+
+        #section-onboarding .toggle-label {
+            font-size: 13.5px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #section-onboarding .toggle-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.3;
+        }
+
+        #section-onboarding .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        #section-onboarding .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        #section-onboarding .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: .4s;
+            border-radius: 34px;
+            border: 1px solid var(--glass-border);
+        }
+
+        #section-onboarding .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        #section-onboarding input:checked + .slider {
+            background-color: var(--primary);
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        #section-onboarding input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        #section-onboarding .input-group {
+            margin-bottom: 16px;
+        }
+
+        #section-onboarding .input-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--primary);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            letter-spacing: 0.05em;
+        }
+
+        #section-onboarding .input-field {
+            width: 100%;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 12px 16px;
+            color: var(--text-main);
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        #section-onboarding .input-field:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 8px var(--primary-glow);
+        }
+
+        #section-onboarding .logo-circle {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 22px;
+            margin: 30px auto 15px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 30px var(--primary-glow);
+            font-size: 32px;
+            animation: pulse 3s infinite ease-in-out;
+        }
+
+        #section-onboarding .analysis-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        #section-onboarding .step-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        #section-onboarding .step-pending {
+            border: 2px solid var(--text-muted);
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        #section-onboarding .step-success {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+        }
+
+        #section-onboarding .item-list {
+            overflow-y: auto;
+            max-height: 380px;
+            padding-right: 4px;
+        }
+
+        #section-onboarding .item-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #section-onboarding .item-list::-webkit-scrollbar-thumb {
+            background: var(--glass-border);
+            border-radius: 4px;
+        }
+
+        #section-onboarding .category-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--primary);
+            text-transform: uppercase;
+            margin: 14px 0 8px 0;
+            letter-spacing: 0.05em;
+        }
+
+        #section-onboarding .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            margin-bottom: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        #section-onboarding .checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--glass-accent);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            font-size: 11px;
+        }
+
+        #section-onboarding .checkbox.checked {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #000;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 20px var(--primary-glow); }
+            50% { transform: scale(1.05); box-shadow: 0 0 35px var(--primary-glow), 0 0 15px rgba(156, 39, 176, 0.4); }
+            100% { transform: scale(1); box-shadow: 0 0 20px var(--primary-glow); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+
+        /* ========================================================
+           2. HAPPY PATH & AGENCY SPECIFIC STYLES
+           ======================================================== */
+        #section-mainpath .screen-container {
+            padding: 16px 20px;
+        }
+
+        #section-mainpath .screen {
+            top: 16px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+        }
+
+        #section-mainpath .sub-header {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        #section-mainpath .ask-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 14px;
+            margin-bottom: 14px;
+        }
+
+        #section-mainpath .ask-question {
+            font-size: 13.5px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        #section-mainpath .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        #section-mainpath .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px 6px;
+            color: var(--text-main);
+            font-size: 12.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-align: center;
+        }
+
+        #section-mainpath .option-btn:hover {
+            border-color: var(--primary);
+            background: rgba(0, 229, 255, 0.05);
+        }
+
+        #section-mainpath .option-btn.selected {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #000;
+            font-weight: 600;
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        #section-mainpath .checklist-scroll {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 16px;
+            padding-right: 2px;
+        }
+
+        #section-mainpath .checklist-scroll::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        #section-mainpath .checklist-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+
+        #section-mainpath .section-header {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 16px 0 8px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #section-mainpath .badge-act {
+            font-size: 9px;
+            background: rgba(0, 230, 118, 0.15);
+            color: var(--success);
+            padding: 1px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        #section-mainpath .badge-ask {
+            font-size: 9px;
+            background: rgba(255, 234, 0, 0.15);
+            color: var(--warning);
+            padding: 1px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        #section-mainpath .item-row {
+            display: flex;
+            align-items: center;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 6px;
+            transition: all 0.2s ease;
+        }
+
+        #section-mainpath .item-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--glass-border);
+            border-radius: 4px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 11px;
+            color: #000;
+        }
+
+        #section-mainpath .item-checkbox.checked {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        #section-mainpath .item-name {
+            font-size: 13px;
+            flex: 1;
+        }
+
+        #section-mainpath .info-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s ease;
+        }
+
+        #section-mainpath .info-btn:hover {
+            color: var(--primary);
+        }
+
+        #section-mainpath .tooltip-card {
+            background: rgba(20, 30, 45, 0.95);
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 11px;
+            line-height: 1.4;
+            color: var(--text-main);
+            margin-top: 4px;
+            display: none;
+            animation: fadeIn 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        #section-mainpath .dont-act-banner {
+            border: 1px dashed rgba(213, 0, 249, 0.3);
+            background: rgba(213, 0, 249, 0.03);
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        #section-mainpath .dont-act-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #e040fb;
+            margin-bottom: 2px;
+        }
+
+        #section-mainpath .dont-act-desc {
+            font-size: 10px;
+            color: var(--text-muted);
+            line-height: 1.3;
+        }
+
+
+        /* ========================================================
+           3. FAILURE & RECOVERY SPECIFIC STYLES
+           ======================================================== */
+        #section-recovery .phone-frame {
+            background: rgba(10, 5, 15, 0.85);
+        }
+
+        #section-recovery .screen-container {
+            padding: 16px 20px;
+        }
+
+        #section-recovery .screen {
+            position: relative;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        #section-recovery .screen.active {
+            display: flex;
+        }
+
+        #section-recovery .scenario-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.04);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 6px;
+            gap: 6px;
+            z-index: 10;
+        }
+
+        #section-recovery .tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        #section-recovery .tab-btn.active {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--primary);
+            border: 1px solid rgba(0, 229, 255, 0.2);
+        }
+
+        #section-recovery .sub-header {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+        }
+
+        #section-recovery .warning-banner {
+            background: rgba(255, 23, 68, 0.1);
+            border: 1px solid var(--danger);
+            box-shadow: 0 4px 15px var(--danger-glow);
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            animation: pulse-border 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-border {
+            0% { border-color: rgba(255, 23, 68, 0.6); }
+            50% { border-color: rgba(255, 23, 68, 1); }
+            100% { border-color: rgba(255, 23, 68, 0.6); }
+        }
+
+        #section-recovery .warn-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #ff1744;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #section-recovery .warn-desc {
+            font-size: 11px;
+            line-height: 1.4;
+            color: var(--text-main);
+        }
+
+        #section-recovery .warn-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        #section-recovery .warn-btn {
+            flex: 1;
+            padding: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        #section-recovery .warn-btn-primary {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        #section-recovery .warn-btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            border: 1px solid var(--glass-border);
+        }
+
+        #section-recovery .items-list {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 12px;
+        }
+
+        #section-recovery .item-row {
+            display: flex;
+            align-items: center;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 10px 12px;
+            margin-bottom: 6px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        #section-recovery .item-row.removed {
+            opacity: 0.35;
+            text-decoration: line-through;
+            border-color: rgba(255, 255, 255, 0.02);
+        }
+
+        #section-recovery .item-row.added {
+            border-color: rgba(0, 230, 118, 0.3);
+            background: rgba(0, 230, 118, 0.02);
+            animation: highlight-add 0.5s ease;
+        }
+
+        @keyframes highlight-add {
+            from { background: rgba(0, 230, 118, 0.2); }
+            to { background: rgba(0, 230, 118, 0.02); }
+        }
+
+        #section-recovery .checkbox {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--glass-border);
+            border-radius: 4px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        #section-recovery .checkbox.checked {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #000;
+        }
+
+        #section-recovery .item-name {
+            font-size: 13px;
+            flex: 1;
+        }
+
+        #section-recovery .badge-danger {
+            font-size: 9px;
+            background: rgba(255, 23, 68, 0.15);
+            color: var(--danger);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        #section-recovery .badge-warning {
+            font-size: 9px;
+            background: rgba(255, 234, 0, 0.15);
+            color: var(--warning);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        #section-recovery .weight-tracker {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 14px;
+        }
+
+        #section-recovery .weight-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        #section-recovery .weight-bar-bg {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        #section-recovery .weight-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: var(--danger);
+            transition: all 0.5s ease;
+        }
+
+        #section-recovery .weight-bar-fill.safe {
+            background: var(--success);
+        }
+
+
+        /* ========================================================
+           4. FEEDBACK MATRIX SPECIFIC STYLES
+           ======================================================== */
+        #section-feedback .fb-container {
+            display: flex;
+            width: 760px;
+            height: 680px;
+            gap: 24px;
+            align-items: center;
+        }
+
+        #section-feedback .phone-frame {
+            width: 340px;
+            height: 620px;
+            border-width: 6px;
+            border-radius: 36px;
+        }
+
+        #section-feedback .status-bar {
+            height: 24px;
+            padding: 0 20px;
+            font-size: 11px;
+        }
+
+        #section-feedback .app-content {
+            flex: 1;
+            padding: 12px 18px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #section-feedback .details-panel {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 24px;
+            height: 620px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            backdrop-filter: blur(10px);
+        }
+
+        #section-feedback .sub-header {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        #section-feedback .hcai-tag {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.25s ease;
+            border: 1px solid transparent;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        #section-feedback .hcai-tag.user-explicit {
+            background: rgba(255, 145, 0, 0.15);
+            color: var(--tag-user-exp);
+            border-color: rgba(255, 145, 0, 0.3);
+        }
+        #section-feedback .hcai-tag.user-implicit {
+            background: rgba(41, 121, 255, 0.15);
+            color: var(--tag-user-imp);
+            border-color: rgba(41, 121, 255, 0.3);
+        }
+        #section-feedback .hcai-tag.system-explicit {
+            background: rgba(0, 230, 118, 0.15);
+            color: var(--tag-sys-exp);
+            border-color: rgba(0, 230, 118, 0.3);
+        }
+        #section-feedback .hcai-tag.system-implicit {
+            background: rgba(213, 0, 249, 0.15);
+            color: var(--tag-sys-imp);
+            border-color: rgba(213, 0, 249, 0.3);
+        }
+
+        #section-feedback .hcai-tag:hover, 
+        #section-feedback .hcai-tag.active {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(255,255,255,0.05);
+        }
+
+        #section-feedback .hcai-tag.active.user-explicit { background: var(--tag-user-exp); color: #000; }
+        #section-feedback .hcai-tag.active.user-implicit { background: var(--tag-user-imp); color: #fff; }
+        #section-feedback .hcai-tag.active.system-explicit { background: var(--tag-sys-exp); color: #000; }
+        #section-feedback .hcai-tag.active.system-implicit { background: var(--tag-sys-imp); color: #fff; }
+
+        #section-feedback .annotated-element {
+            border: 1px solid transparent;
+            border-radius: 12px;
+            padding: 8px;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        #section-feedback .annotated-element.highlighted {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
+        }
+
+        #section-feedback .toast-ui {
+            background: rgba(0, 230, 118, 0.95);
+            color: #000;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        #section-feedback .checklist-title {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+
+        #section-feedback .item-row {
+            display: flex;
+            align-items: center;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+
+        #section-feedback .checkbox {
+            width: 14px;
+            height: 14px;
+            border: 1.5px solid var(--glass-border);
+            border-radius: 3px;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+        }
+
+        #section-feedback .checkbox.checked {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #000;
+        }
+
+        #section-feedback .item-name {
+            flex: 1;
+        }
+
+        #section-feedback .detail-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 15px;
+            display: none;
+            animation: fbFadeIn 0.3s ease;
+        }
+
+        #section-feedback .detail-card.active {
+            display: block;
+        }
+
+        #section-feedback .detail-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #section-feedback .detail-desc {
+            font-size: 12.5px;
+            line-height: 1.5;
+            color: var(--text-main);
+        }
+
+        @keyframes fbFadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- DASHBOARD HEADER -->
+    <header class="db-header">
+        <div class="db-logo">
+            🎒 AI Smart Packing <span>Day 18 Unified Prototype</span>
+        </div>
+        <nav class="tab-nav">
+            <button class="nav-btn active" onclick="switchProtoTab('onboarding')">1. Onboarding</button>
+            <button class="nav-btn" onclick="switchProtoTab('mainpath')">2. Happy Path & Agency</button>
+            <button class="nav-btn" onclick="switchProtoTab('recovery')">3. Cảnh báo & Khôi phục</button>
+            <button class="nav-btn" onclick="switchProtoTab('feedback')">4. Ma trận Phản hồi 2x2</button>
+        </nav>
+    </header>
+    
+    <!-- DASHBOARD MAIN -->
+    <main class="db-main">
+
+        <!-- ========================================================
+             1. ONBOARDING SECTION
+             ======================================================== -->
+        <section id="section-onboarding" class="proto-section active">
+            <div class="phone-frame">
+                <!-- Status Bar Mockup -->
+                <div class="status-bar">
+                    <span>12:45</span>
+                    <div class="right-icons">
+                        <span>📶</span>
+                        <span>🔋</span>
+                    </div>
+                </div>
+        
+                <div class="screen-container">
+                    <!-- Screen 1: Welcome -->
+                    <div class="screen active" id="onb-screen-welcome">
+                        <div class="logo-circle">🎒</div>
+                        <h1 style="text-align: center;">AI Smart Packing</h1>
+                        <h2 style="text-align: center; margin-bottom: 15px;">Trợ lý hành lý thông minh</h2>
+                        
+                        <p style="text-align: center; font-size: 13px;">
+                            Tôi sẽ tự động đọc dự báo thời tiết và lịch trình chuyến đi của bạn để tạo ra danh sách chuẩn bị tối ưu nhất.
+                        </p>
+        
+                        <div class="glass-card">
+                            <div class="glass-card-title">💡 Ranh giới & Giới hạn AI</div>
+                            <ul>
+                                <li>AI chỉ gợi ý và không tự động thanh toán hay mua bất kỳ thứ gì.</li>
+                                <li>Chúng tôi phân tích thời tiết thực tế nhưng bạn mới là người quyết định cuối cùng.</li>
+                                <li>Chúng tôi không biết tủ đồ cá nhân thực tế của bạn có gì.</li>
+                            </ul>
+                        </div>
+        
+                        <div class="btn-container">
+                            <button class="btn" onclick="onbNextScreen('onb-screen-permissions')">Bắt đầu thiết lập</button>
+                        </div>
+                    </div>
+        
+                    <!-- Screen 2: Permissions -->
+                    <div class="screen" id="onb-screen-permissions">
+                        <h1>Dữ liệu & Quyền hạn</h1>
+                        <p>Để trợ lý AI hoạt động thông minh nhất, hãy cho phép chúng tôi sử dụng các thông tin sau:</p>
+        
+                        <!-- Toggle Weather -->
+                        <div class="toggle-item">
+                            <div class="toggle-info">
+                                <div class="toggle-label">⛅ Dự báo thời tiết</div>
+                                <div class="toggle-desc">Đề xuất đồ giữ ấm, ô che mưa, hoặc đồ bơi dựa trên dự báo thời gian thực tại điểm đến.</div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="onb-perm-weather" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+        
+                        <!-- Toggle Itinerary -->
+                        <div class="toggle-item">
+                            <div class="toggle-info">
+                                <div class="toggle-label">📅 Lịch trình du lịch</div>
+                                <div class="toggle-desc">Tự động phát hiện hoạt động leo núi, lặn biển để thêm trang bị phù hợp với bối cảnh.</div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="onb-perm-itinerary" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+        
+                        <div class="glass-card" style="margin-top: 5px; padding: 12px;">
+                            <div class="glass-card-title" style="color: #4caf50; font-size: 11px;">🔒 Cam kết bảo mật</div>
+                            <span style="font-size: 11px; color: var(--text-muted); line-height: 1.4; display: block;">
+                                Dữ liệu được xử lý ẩn và bảo mật tuyệt đối cho chuyến đi hiện tại, không lưu trữ lâu dài khi chưa có sự cho phép.
+                            </span>
+                        </div>
+        
+                        <div class="btn-container">
+                            <button class="btn" onclick="onbNextScreen('onb-screen-input')">Tiếp theo</button>
+                            <button class="btn btn-secondary" onclick="onbPrevScreen('onb-screen-welcome')">Quay lại</button>
+                        </div>
+                    </div>
+        
+                    <!-- Screen 3: Input & Processing -->
+                    <div class="screen" id="onb-screen-input">
+                        <h1>Thông tin chuyến đi</h1>
+                        <p>Nhập điểm đến và ngày khởi hành để AI bắt đầu quét dữ liệu thời tiết và lịch trình.</p>
+        
+                        <div class="input-group">
+                            <label for="onb-dest-input">Điểm đến</label>
+                            <input type="text" class="input-field" id="onb-dest-input" value="Đà Lạt, Lâm Đồng">
+                        </div>
+        
+                        <div class="input-group">
+                            <label for="onb-date-input">Ngày khởi hành</label>
+                            <input type="text" class="input-field" id="onb-date-input" value="10/07/2026 - 12/07/2026">
+                        </div>
+        
+                        <div class="btn-container">
+                            <button class="btn" onclick="onbStartAnalysis()">Tạo Checklist hành trang</button>
+                            <button class="btn btn-secondary" onclick="onbPrevScreen('onb-screen-permissions')">Quay lại</button>
+                        </div>
+                    </div>
+        
+                    <!-- Screen 3b: AI Loading Status -->
+                    <div class="screen" id="onb-screen-loading">
+                        <div class="logo-circle" style="width: 60px; height: 60px; font-size: 24px; margin-top: 20px;">🧠</div>
+                        <h1 style="text-align: center; margin-bottom: 20px;">AI Đang Phân Tích...</h1>
+        
+                        <div class="analysis-step" id="onb-step-weather">
+                            <div class="step-icon step-pending" id="onb-icon-weather"></div>
+                            <div>Đang kết nối API thời tiết...</div>
+                        </div>
+        
+                        <div class="analysis-step" id="onb-step-itinerary" style="opacity: 0.5;">
+                            <div class="step-icon" id="onb-icon-itinerary">⏳</div>
+                            <div>Đang đọc các hoạt động trong lịch trình...</div>
+                        </div>
+        
+                        <div class="analysis-step" id="onb-step-recommend" style="opacity: 0.5;">
+                            <div class="step-icon" id="onb-icon-recommend">⏳</div>
+                            <div>Đang phân nhóm hành lý đề xuất...</div>
+                        </div>
+                    </div>
+        
+                    <!-- Screen 4: Draft Checklist Output -->
+                    <div class="screen" id="onb-screen-checklist">
+                        <h1>Hành trang đề xuất</h1>
+                        <p style="margin-bottom: 10px;">Checklist Đà Lạt (10/7 - 12/7) dựa trên dự báo mưa lạnh & hoạt động trekking.</p>
+        
+                        <div class="item-list" id="onb-checklist-items">
+                            <div class="category-title">A. Vật dụng bắt buộc (Act)</div>
+                            <div class="checklist-item">
+                                <div class="checkbox checked">✓</div>
+                                <span>Giấy tờ tùy thân & Tiền mặt</span>
+                            </div>
+                            <div class="checklist-item">
+                                <div class="checkbox"></div>
+                                <span>Quần áo cá nhân (3 ngày)</span>
+                            </div>
+        
+                            <div class="category-title">B. Do thời tiết mưa lạnh (Act)</div>
+                            <div class="checklist-item" style="border-color: rgba(224, 64, 251, 0.3);">
+                                <div class="checkbox"></div>
+                                <span>Áo khoác giữ ấm 🧥</span>
+                            </div>
+                            <div class="checklist-item">
+                                <div class="checkbox"></div>
+                                <span>Áo mưa tiện lợi</span>
+                            </div>
+        
+                            <div class="category-title">C. Do hoạt động Trekking Langbiang</div>
+                            <div class="checklist-item" style="border-color: rgba(0, 229, 255, 0.3);">
+                                <div class="checkbox"></div>
+                                <span>Giày trekking bám tốt 👟 (Explain)</span>
+                            </div>
+                        </div>
+        
+                        <div class="btn-container" style="margin-top: 15px;">
+                            <button class="btn" onclick="alert('Đã lưu checklist thành công!')">Xác nhận checklist</button>
+                            <button class="btn btn-secondary" onclick="onbNextScreen('onb-screen-input')">Làm lại</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ========================================================
+             2. HAPPY PATH & AGENCY SECTION
+             ======================================================== -->
+        <section id="section-mainpath" class="proto-section">
+            <div class="phone-frame">
+                <!-- Status Bar -->
+                <div class="status-bar">
+                    <span>12:50</span>
+                    <div class="right-icons">
+                        <span>📶</span>
+                        <span>🔋</span>
+                    </div>
+                </div>
+        
+                <div class="screen-container">
+                    <!-- Screen 4: Ask (Thu nhập bối cảnh) -->
+                    <div class="screen active" id="mp-screen-ask">
+                        <h1>Lập Hành Trang Đà Lạt</h1>
+                        <div class="sub-header">📍 10/07/2026 - 12/07/2026</div>
+        
+                        <p style="font-size: 13px; margin-bottom: 16px;">
+                            AI phát hiện lịch trình của bạn có hoạt động tại Langbiang. Hãy giúp tôi trả lời 2 câu hỏi để tối ưu hóa gợi ý:
+                        </p>
+        
+                        <!-- Question 1 -->
+                        <div class="ask-card">
+                            <div class="ask-question">1. Bạn dự định di chuyển thế nào tại Langbiang?</div>
+                            <div class="options-grid">
+                                <button class="option-btn" id="mp-btn-trekking" onclick="mpSelectActivity('trekking')">Trekking / Đi bộ</button>
+                                <button class="option-btn" id="mp-btn-jeep" onclick="mpSelectActivity('jeep')">Đi xe Jeep / Xe ôm</button>
+                            </div>
+                        </div>
+        
+                        <!-- Question 2 -->
+                        <div class="ask-card">
+                            <div class="ask-question">2. Phong cách mang hành lý của bạn?</div>
+                            <div class="options-grid">
+                                <button class="option-btn" id="mp-btn-light" onclick="mpSelectStyle('light')">Gọn nhẹ tối giản</button>
+                                <button class="option-btn" id="mp-btn-full" onclick="mpSelectStyle('full')">Đầy đủ dự phòng</button>
+                            </div>
+                        </div>
+        
+                        <div style="margin-top: auto;">
+                            <button class="btn" id="mp-btn-generate" disabled onclick="mpGenerateChecklist()">Tạo Checklist Tối Ưu</button>
+                        </div>
+                    </div>
+        
+                    <!-- Screen 5: Act & Explainability Checklist -->
+                    <div class="screen" id="mp-screen-checklist">
+                        <h1>Hành lý Đà Lạt của bạn</h1>
+                        <div class="sub-header">💡 Tối ưu hóa theo lựa chọn cá nhân</div>
+        
+                        <div class="checklist-scroll">
+                            <!-- Category: Bắt buộc (Act) -->
+                            <div class="section-header">
+                                <span>Vật dụng thiết yếu</span>
+                                <span class="badge-act">AI Tự Điền (Act)</span>
+                            </div>
+                            <div class="item-row">
+                                <div class="item-checkbox checked">✓</div>
+                                <div class="item-name">Giấy tờ tùy thân & Ví tiền</div>
+                            </div>
+                            <div class="item-row">
+                                <div class="item-checkbox checked">✓</div>
+                                <div class="item-name">Điện thoại & Bộ sạc cáp</div>
+                            </div>
+        
+                            <!-- Category: Thời tiết (Act + Explainability) -->
+                            <div class="section-header">
+                                <span>Thời tiết Đà Lạt mưa lạnh</span>
+                                <span class="badge-act">AI Đề xuất (Act)</span>
+                            </div>
+                            <div class="item-row" style="flex-direction: column; align-items: stretch; padding: 10px 12px;">
+                                <div style="display: flex; align-items: center; width: 100%;">
+                                    <div class="item-checkbox checked">✓</div>
+                                    <div class="item-name">Áo khoác giữ ấm 🧥</div>
+                                    <button class="info-btn" onclick="mpToggleTooltip('mp-tooltip-weather')">ⓘ</button>
+                                </div>
+                                <div class="tooltip-card" id="mp-tooltip-weather">
+                                    <strong>Lý do đề xuất (Explainability):</strong><br>
+                                    Dự báo thời tiết Đà Lạt ngày 11/7 có khả năng mưa 80%, nhiệt độ giảm sâu xuống 15°C kèm gió lạnh.
+                                </div>
+                            </div>
+        
+                            <!-- Category: Hoạt động (Ask/Act) -->
+                            <div class="section-header">
+                                <span>Theo hoạt động Langbiang</span>
+                                <span class="badge-act" id="mp-badge-langbiang">Tùy biến</span>
+                            </div>
+                            <div id="mp-dynamic-items">
+                                <!-- Items inserted dynamically -->
+                            </div>
+        
+                            <!-- Don't Act Section (Rủi ro cao) -->
+                            <div class="dont-act-banner">
+                                <span style="font-size: 18px;">🛒</span>
+                                <div>
+                                    <div class="dont-act-title">Gợi ý mua sắm: Sạc dự phòng</div>
+                                    <div class="dont-act-desc">
+                                        AI phát hiện lịch trình đi cả ngày nhưng bạn chưa đánh dấu có sạc dự phòng.
+                                    </div>
+                                    <div style="display: flex; gap: 8px; margin-top: 8px;">
+                                        <a href="#" onclick="alert('Đã chuyển tiếp tới liên kết mua sắm bên ngoài')" style="color: var(--primary); font-size: 11px; font-weight: 600; text-decoration: none;">[Xem Link Mua]</a>
+                                        <span class="badge-ask">Don't Act (Cần xác nhận)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+        
+                        <div class="btn-container">
+                            <button class="btn" onclick="alert('Đã phê duyệt và lưu hành trang thành công!')">Xác nhận checklist</button>
+                            <button class="btn btn-secondary" onclick="mpResetPrototype()">Quay lại thiết lập</button>
+                        </div>
+                    </div>
+        
+                    <!-- Modal Ghi nhớ thói quen (Opt-in) -->
+                    <div id="mp-pref-modal" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
+                        <div class="glass-card" style="border: 1px solid var(--primary); background: #120f1d; padding: 20px; text-align: center; border-radius: 20px;">
+                            <div style="font-size: 24px; margin-bottom: 12px;">🧠</div>
+                            <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 8px; color: var(--primary);">Ghi nhớ sở thích?</h3>
+                            <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-bottom: 16px;">
+                                Bạn vừa bỏ chọn "Giày leo núi". AI có nên ghi nhớ và bỏ đề xuất giày leo núi cho toàn bộ chuyến đi Trekking tiếp theo của bạn không?
+                            </p>
+                            
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; width: 100%;">
+                                <input type="checkbox" id="mp-pref-optin" style="width: 15px; height: 15px; accent-color: var(--primary); cursor: pointer;">
+                                <label for="mp-pref-optin" style="font-size: 11px; font-weight: 600; color: #fff; cursor: pointer;">Đồng ý ghi nhớ thói quen này</label>
+                            </div>
+                            
+                            <div style="display: flex; gap: 8px; width: 100%;">
+                                <button class="btn" style="padding: 10px; font-size: 12px; flex: 1;" onclick="mpSavePreference(true)">Xác nhận</button>
+                                <button class="btn btn-secondary" style="padding: 10px; font-size: 12px; margin-top: 0; flex: 1;" onclick="mpSavePreference(false)">Bỏ qua</button>
+                            </div>
+                        </div>
+                    </div>
+        
+                    <!-- Toast feedback notification -->
+                    <div class="toast" id="mp-toast">Đã cập nhật thành công!</div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ========================================================
+             3. FAILURE & RECOVERY SECTION
+             ======================================================== -->
+        <section id="section-recovery" class="proto-section">
+            <div class="phone-frame">
+                <!-- Status Bar -->
+                <div class="status-bar">
+                    <span>12:53</span>
+                    <div class="right-icons">
+                        <span>📶</span>
+                        <span>🔋</span>
+                    </div>
+                </div>
+        
+                <!-- Scenario Tabs Menu -->
+                <div class="scenario-tabs">
+                    <button class="tab-btn active" id="rec-tab-weather" onclick="recSwitchScenario('weather')">1. Cảnh báo thời tiết</button>
+                    <button class="tab-btn" id="rec-tab-weight" onclick="recSwitchScenario('weight')">2. Tối ưu cân nặng bay</button>
+                </div>
+        
+                <div class="screen-container">
+                    <!-- SCENARIO 1: Weather Recovery (Fansipan) -->
+                    <div class="screen active" id="rec-screen-weather">
+                        <h1>Hành trang Fansipan</h1>
+                        <div class="sub-header">📍 3 ngày leo núi dã ngoại</div>
+        
+                        <!-- Alert Banner -->
+                        <div class="warning-banner" id="rec-weather-alert">
+                            <div class="warn-title">⚠️ Thời tiết Fansipan đột ngột thay đổi!</div>
+                            <div class="warn-desc">
+                                Nhiệt độ dự báo giảm từ 22°C xuống 8°C kèm gió mạnh và mưa lớn. Hành lý cũ không còn an toàn.
+                            </div>
+                            <div class="warn-actions">
+                                <button class="warn-btn warn-btn-primary" onclick="recApplyWeatherRecovery()">Cập nhật đồ ấm</button>
+                                <button class="warn-btn warn-btn-secondary" onclick="recIgnoreWeatherAlert()">Giữ nguyên</button>
+                            </div>
+                        </div>
+        
+                        <!-- Items list -->
+                        <div class="items-list" id="rec-weather-items">
+                            <div class="item-row" id="rec-item-sunscreen">
+                                <div class="checkbox"></div>
+                                <div class="item-name">Kem chống nắng & Kính râm</div>
+                            </div>
+                            <div class="item-row" id="rec-item-shorts">
+                                <div class="checkbox"></div>
+                                <div class="item-name">Quần shorts thể thao dã ngoại</div>
+                            </div>
+                            <div class="item-row">
+                                <div class="checkbox"></div>
+                                <div class="item-name">Giày trekking bám tốt</div>
+                            </div>
+                            <div class="item-row">
+                                <div class="checkbox"></div>
+                                <div class="item-name">Đèn pin cá nhân</div>
+                            </div>
+                        </div>
+                    </div>
+        
+                    <!-- SCENARIO 2: Weight & Baggage Prohibited (Vietjet) -->
+                    <div class="screen" id="rec-screen-weight">
+                        <h1>Hành lý Vietjet Cabin</h1>
+                        <div class="sub-header">✈️ Hạn mức xách tay: 7.0 kg</div>
+        
+                        <!-- Weight status tracker -->
+                        <div class="weight-tracker">
+                            <div class="weight-info">
+                                <span>Cân nặng hành lý:</span>
+                                <span id="rec-weight-label" style="color: var(--danger);">12.2 kg (Quá tải ⚠️)</span>
+                            </div>
+                            <div class="weight-bar-bg">
+                                <div class="weight-bar-fill" id="rec-weight-bar"></div>
+                            </div>
+                        </div>
+        
+                        <!-- Prohibited warning action banner -->
+                        <div class="warning-banner" id="rec-weight-alert" style="background: rgba(255, 23, 68, 0.05); border-color: rgba(255, 23, 68, 0.4);">
+                            <div class="warn-desc" style="font-size: 11px;">
+                                Danh sách chứa vật phẩm cấm mang lên cabin và vượt quá 7.0kg hạn mức xách tay.
+                            </div>
+                            <div class="warn-actions">
+                                <button class="warn-btn warn-btn-primary" style="background: var(--primary); color: #000;" onclick="recOptimizeFlightWeight()">Tối ưu theo luật bay</button>
+                                <button class="warn-btn warn-btn-secondary" onclick="recBuyCheckinWeight()">Tôi sẽ mua ký gửi</button>
+                            </div>
+                        </div>
+        
+                        <div class="items-list" id="rec-weight-items">
+                            <div class="item-row" id="rec-flight-item-knife">
+                                <div class="checkbox"></div>
+                                <div class="item-name">Bộ dao đa năng dã ngoại</div>
+                                <span class="badge-danger">🚫 Cấm Cabin</span>
+                            </div>
+                            <div class="item-row" id="rec-flight-item-pole">
+                                <div class="checkbox"></div>
+                                <div class="item-name">Gậy leo núi kim loại</div>
+                                <span class="badge-danger">🚫 Cấm Cabin</span>
+                            </div>
+                            <div class="item-row">
+                                <div class="checkbox"></div>
+                                <div class="item-name">Pin dự phòng Lithium (Flycam)</div>
+                                <span class="badge-warning">⚠️ Xách tay, cấm ký gửi</span>
+                            </div>
+                            <div class="item-row" id="rec-flight-item-tent">
+                                <div class="checkbox"></div>
+                                <div class="item-name">Lều cắm trại cá nhân (3.5kg)</div>
+                            </div>
+                            <div class="item-row" id="rec-flight-item-sleepingbag">
+                                <div class="checkbox"></div>
+                                <div class="item-name">Túi ngủ ấm (1.5kg)</div>
+                            </div>
+                        </div>
+                    </div>
+        
+                    <!-- Toast feedback notification -->
+                    <div class="toast" id="rec-toast">Đã cập nhật thành công!</div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ========================================================
+             4. FEEDBACK MATRIX SECTION (DUAL PANEL)
+             ======================================================== -->
+        <section id="section-feedback" class="proto-section">
+            <div class="fb-container">
+                <!-- LEFT: App UI Mockup -->
+                <div class="phone-frame">
+                    <div class="status-bar">
+                        <span>12:56</span>
+                        <span>📶 🔋</span>
+                    </div>
+        
+                    <div class="app-content">
+                        <!-- System Explicit Feedback Area -->
+                        <div class="annotated-element" id="fb-ui-sys-exp">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <span class="hcai-tag system-explicit" onclick="fbHighlightFeedback('sys-exp')">Sys Explicit</span>
+                            </div>
+                            <div class="toast-ui">✓ Đã ghi nhớ bối cảnh công tác. Đã xóa đồ bơi.</div>
+                        </div>
+        
+                        <div class="checklist-title">Hành lý đề xuất</div>
+        
+                        <!-- System Implicit Feedback Area -->
+                        <div class="annotated-element" id="fb-ui-sys-imp">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <span class="hcai-tag system-implicit" onclick="fbHighlightFeedback('sys-imp')">Sys Implicit</span>
+                            </div>
+                            <div class="item-row" style="font-weight: 700; border-color: rgba(213,0,249,0.3);">
+                                <div class="checkbox checked">✓</div>
+                                <div class="item-name">Áo khoác gió giữ ấm 🧥 (Ưu tiên đầu)</div>
+                            </div>
+                        </div>
+        
+                        <!-- Regular Item -->
+                        <div class="item-row">
+                            <div class="checkbox"></div>
+                            <div class="item-name">Điện thoại & Bộ sạc cáp</div>
+                        </div>
+        
+                        <!-- User Explicit Feedback Area -->
+                        <div class="annotated-element" id="fb-ui-user-exp">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <span class="hcai-tag user-explicit" onclick="fbHighlightFeedback('user-exp')">User Explicit</span>
+                            </div>
+                            <div class="item-row" style="opacity: 0.5; text-decoration: line-through;">
+                                <div class="checkbox"></div>
+                                <div class="item-name">Đồ bơi & Kính bơi 🚫 (Đã xóa)</div>
+                            </div>
+                            <div style="font-size: 10px; color: var(--text-muted); margin-left: 12px; margin-top: 4px;">
+                                Lý do xóa: <strong>Đi công tác</strong>
+                            </div>
+                        </div>
+        
+                        <!-- User Implicit Feedback Area -->
+                        <div class="annotated-element" id="fb-ui-user-imp">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <span class="hcai-tag user-implicit" onclick="fbHighlightFeedback('user-imp')">User Implicit</span>
+                            </div>
+                            <div class="item-row" style="border-color: rgba(41, 121, 255, 0.3);">
+                                <div class="checkbox"></div>
+                                <div class="item-name">Sạc dự phòng ⚡ (Bỏ qua đề xuất mua)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <!-- RIGHT: Interactive Explanation Panel -->
+                <div class="details-panel">
+                    <h1 style="font-size: 19px;">Vòng Phản Hồi Hai Chiều (HCAI)</h1>
+                    <div class="sub-header">Mô phỏng tương tác ma trận phản hồi 2x2</div>
+        
+                    <p style="font-size: 13px; line-height: 1.4; color: var(--text-muted); margin-bottom: 15px;">
+                        Nhấp vào các thẻ nhãn màu sắc trên giao diện điện thoại để kiểm tra cách Người dùng và Hệ thống AI trao đổi phản hồi (Feedback loops).
+                    </p>
+        
+                    <!-- Card User Explicit -->
+                    <div class="detail-card active" id="fb-card-user-exp">
+                        <div class="detail-title" style="color: var(--tag-user-exp);">
+                            <span>●</span> User Explicit Feedback (Tường minh)
+                        </div>
+                        <div class="detail-desc">
+                            <strong>Hành động:</strong> Người dùng nhấn nút xóa "Đồ bơi" khỏi danh sách đề xuất và chủ động chọn lý do phản hồi là "Đi công tác".<br><br>
+                            <strong>Tác dụng:</strong> Gửi tín hiệu trực tiếp, rõ ràng đến AI để loại bỏ vật phẩm này ngay lập tức và thay đổi bối cảnh chuyến đi mà không cần đoán mò.
+                        </div>
+                    </div>
+        
+                    <!-- Card User Implicit -->
+                    <div class="detail-card" id="fb-card-user-imp">
+                        <div class="detail-title" style="color: var(--tag-user-imp);">
+                            <span>●</span> User Implicit Feedback (Ngầm định)
+                        </div>
+                        <div class="detail-desc">
+                            <strong>Hành động:</strong> Người dùng dừng lại đọc tooltip giải thích thời tiết lâu hơn bình thường, hoặc bỏ qua không click vào liên kết đề xuất mua sạc dự phòng.<br><br>
+                            <strong>Tác dụng:</strong> AI thu thập thời gian đọc (độ quan tâm) và hành động bỏ qua mua sắm để tự động tối ưu hóa tần suất hiển thị quảng cáo gợi ý mua sắm mà không làm phiền người dùng.
+                        </div>
+                    </div>
+        
+                    <!-- Card System Explicit -->
+                    <div class="detail-card" id="fb-card-sys-exp">
+                        <div class="detail-title" style="color: var(--tag-sys-exp);">
+                            <span>●</span> System Explicit Feedback (Tường minh)
+                        </div>
+                        <div class="detail-desc">
+                            <strong>Hành động:</strong> AI hiển thị thông báo Toast xác nhận rõ ràng: *"Đã ghi nhớ bối cảnh công tác. Đã xóa đồ bơi."*<br><br>
+                            <strong>Tác dụng:</strong> Xác nhận trực tiếp với người dùng rằng hệ thống đã nhận tín hiệu phản hồi, đã thực hiện hành động gì và đã học được bối cảnh gì mới để xây dựng niềm tin.
+                        </div>
+                    </div>
+        
+                    <!-- Card System Implicit -->
+                    <div class="detail-card" id="fb-card-sys-imp">
+                        <div class="detail-title" style="color: var(--tag-sys-imp);">
+                            <span>●</span> System Implicit Feedback (Ngầm định)
+                        </div>
+                        <div class="detail-desc">
+                            <strong>Hành động:</strong> AI tự động in đậm món "Áo khoác gió" và sắp xếp đẩy lên trên cùng danh sách dựa theo phân tích thời tiết mưa lạnh 15°C.<br><br>
+                            <strong>Tác dụng:</strong> Hệ thống tự động tối ưu hóa thứ tự ưu tiên giúp người dùng dễ nhận thấy các món quan trọng nhất mà không cần bật thông báo pop-up gây gián đoạn trải nghiệm.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        /* ========================================================
+           GLOBAL NAVIGATION / TAB ROUTING
+           ======================================================== */
+        function switchProtoTab(tabId) {
+            // Update URL Hash
+            window.location.hash = tabId;
+            
+            // Toggle active state on buttons
+            const navButtons = document.querySelectorAll('.tab-nav .nav-btn');
+            navButtons.forEach(btn => btn.classList.remove('active'));
+            
+            const tabIndices = { 'onboarding': 0, 'mainpath': 1, 'recovery': 2, 'feedback': 3 };
+            const activeBtn = navButtons[tabIndices[tabId]];
+            if (activeBtn) activeBtn.classList.add('active');
+            
+            // Toggle active state on sections
+            document.querySelectorAll('.proto-section').forEach(sec => {
+                sec.classList.remove('active');
+            });
+            const activeSec = document.getElementById(`section-${tabId}`);
+            if (activeSec) activeSec.classList.add('active');
+        }
+
+        // Handle Hash Routing
+        window.addEventListener('load', () => {
+            const hash = window.location.hash.substring(1);
+            if (['onboarding', 'mainpath', 'recovery', 'feedback'].includes(hash)) {
+                switchProtoTab(hash);
+            } else {
+                switchProtoTab('onboarding');
+            }
+            
+            // Initialize scripts
+            initMpStaticCheckboxes();
+            initRecCheckboxes();
+        });
+
+        window.addEventListener('hashchange', () => {
+            const hash = window.location.hash.substring(1);
+            if (['onboarding', 'mainpath', 'recovery', 'feedback'].includes(hash)) {
+                switchProtoTab(hash);
+            }
+        });
+
+
+        /* ========================================================
+           1. ONBOARDING JAVASCRIPT
+           ======================================================== */
+        function onbNextScreen(screenId) {
+            document.querySelectorAll('#section-onboarding .screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function onbPrevScreen(screenId) {
+            onbNextScreen(screenId);
+        }
+
+        function onbStartAnalysis() {
+            onbNextScreen('onb-screen-loading');
+            
+            // Step 1: Weather Check
+            setTimeout(() => {
+                const weatherStep = document.getElementById('onb-step-weather');
+                const weatherIcon = document.getElementById('onb-icon-weather');
+                weatherIcon.className = 'step-icon step-success';
+                weatherIcon.innerHTML = '✓';
+                weatherStep.querySelector('div:last-child').innerHTML = 'Đã kiểm tra thời tiết Đà Lạt (15-20°C, mưa 80%)';
+                
+                // Active Step 2
+                const itineraryStep = document.getElementById('onb-step-itinerary');
+                itineraryStep.style.opacity = '1';
+                const itineraryIcon = document.getElementById('onb-icon-itinerary');
+                itineraryIcon.className = 'step-icon step-pending';
+                itineraryIcon.innerHTML = '';
+            }, 1200);
+
+            // Step 2: Itinerary Check
+            setTimeout(() => {
+                const itineraryStep = document.getElementById('onb-step-itinerary');
+                const itineraryIcon = document.getElementById('onb-icon-itinerary');
+                itineraryIcon.className = 'step-icon step-success';
+                itineraryIcon.innerHTML = '✓';
+                itineraryStep.querySelector('div:last-child').innerHTML = 'Đã quét lịch trình (Phát hiện: Trekking Langbiang)';
+
+                // Active Step 3
+                const recommendStep = document.getElementById('onb-step-recommend');
+                recommendStep.style.opacity = '1';
+                const recommendIcon = document.getElementById('onb-icon-recommend');
+                recommendIcon.className = 'step-icon step-pending';
+                recommendIcon.innerHTML = '';
+            }, 2400);
+
+            // Step 3: Done
+            setTimeout(() => {
+                const recommendStep = document.getElementById('onb-step-recommend');
+                const recommendIcon = document.getElementById('onb-icon-recommend');
+                recommendIcon.className = 'step-icon step-success';
+                recommendIcon.innerHTML = '✓';
+                recommendStep.querySelector('div:last-child').innerHTML = 'Đã nhóm & Tối ưu hóa 8 vật dụng đề xuất';
+            }, 3600);
+
+            // Navigate to Checklist
+            setTimeout(() => {
+                onbNextScreen('onb-screen-checklist');
+            }, 4500);
+        }
+
+        // Toggle checkbox interaction on onboarding checklist screen
+        document.querySelectorAll('#onb-screen-checklist .checklist-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const checkbox = this.querySelector('.checkbox');
+                checkbox.classList.toggle('checked');
+                if (checkbox.classList.contains('checked')) {
+                    checkbox.innerHTML = '✓';
+                } else {
+                    checkbox.innerHTML = '';
+                }
+            });
+        });
+
+
+        /* ========================================================
+           2. HAPPY PATH & AGENCY JAVASCRIPT
+           ======================================================== */
+        let mpSelectedActivity = null;
+        let mpSelectedStyle = null;
+        let mpLastAction = null;
+        let mpToastTimeout = null;
+
+        function mpSelectActivity(type) {
+            mpSelectedActivity = type;
+            document.getElementById('mp-btn-trekking').classList.remove('selected');
+            document.getElementById('mp-btn-jeep').classList.remove('selected');
+            document.getElementById(`mp-btn-${type}`).classList.add('selected');
+            mpCheckReady();
+        }
+
+        function mpSelectStyle(type) {
+            mpSelectedStyle = type;
+            document.getElementById('mp-btn-light').classList.remove('selected');
+            document.getElementById('mp-btn-full').classList.remove('selected');
+            document.getElementById(`mp-btn-${type}`).classList.add('selected');
+            mpCheckReady();
+        }
+
+        function mpCheckReady() {
+            if (mpSelectedActivity && mpSelectedStyle) {
+                document.getElementById('mp-btn-generate').removeAttribute('disabled');
+            }
+        }
+
+        function mpToggleTooltip(id) {
+            const el = document.getElementById(id);
+            if (el.style.display === 'block') {
+                el.style.display = 'none';
+            } else {
+                el.style.display = 'block';
+            }
+        }
+
+        function mpGenerateChecklist() {
+            const container = document.getElementById('mp-dynamic-items');
+            container.innerHTML = ''; // Reset
+
+            if (mpSelectedActivity === 'trekking') {
+                document.getElementById('mp-badge-langbiang').innerText = "Trekking Đề xuất";
+                
+                container.innerHTML += `
+                    <div class="item-row" style="flex-direction: column; align-items: stretch; padding: 10px 12px; margin-bottom: 6px;">
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <div class="item-checkbox checked">✓</div>
+                            <div class="item-name">Giày leo núi / thể thao chuyên dụng 👟</div>
+                            <button class="info-btn" onclick="mpToggleTooltip('mp-tooltip-trekking')">ⓘ</button>
+                        </div>
+                        <div class="tooltip-card" id="mp-tooltip-trekking">
+                            <strong>Lý do đề xuất:</strong> Bạn đã chọn Trekking/đi bộ chinh phục đỉnh Langbiang. Giày có gai bám sâu sẽ bảo vệ bạn khỏi trơn trượt khi trời ẩm ướt.
+                        </div>
+                    </div>
+                    <div class="item-row">
+                        <div class="item-checkbox checked">✓</div>
+                        <div class="item-name">Bình nước cá nhân 1.5L</div>
+                    </div>
+                `;
+            } else {
+                document.getElementById('mp-badge-langbiang').innerText = "Di chuyển Jeep Đề xuất";
+                container.innerHTML += `
+                    <div class="item-row">
+                        <div class="item-checkbox checked">✓</div>
+                        <div class="item-name">Kính râm / Kính mát 🕶️</div>
+                    </div>
+                    <div class="item-row">
+                        <div class="item-checkbox checked">✓</div>
+                        <div class="item-name">Mũ che nắng / nón rộng vành</div>
+                    </div>
+                `;
+            }
+
+            if (mpSelectedStyle === 'full') {
+                container.innerHTML += `
+                    <div class="item-row">
+                        <div class="item-checkbox"></div>
+                        <div class="item-name">Bộ áo mưa & Túi chống nước thiết bị (Dự phòng)</div>
+                    </div>
+                    <div class="item-row">
+                        <div class="item-checkbox"></div>
+                        <div class="item-name">Một đôi tất (vớ) sơ cua</div>
+                    </div>
+                `;
+            }
+
+            // Interactive check logic for dynamic items
+            setTimeout(() => {
+                document.querySelectorAll('#mp-dynamic-items .item-checkbox').forEach(box => {
+                    box.onclick = function() {
+                        this.classList.toggle('checked');
+                        if (this.classList.contains('checked')) {
+                            this.innerHTML = '✓';
+                        } else {
+                            this.innerHTML = '';
+                            if (this.nextElementSibling && this.nextElementSibling.innerText.includes('Giày leo núi')) {
+                                mpLastAction = { type: 'uncheck-shoes' };
+                                mpOpenPrefModal();
+                            }
+                        }
+                    };
+                });
+            }, 100);
+
+            mpNextScreen('mp-screen-checklist');
+        }
+
+        function mpNextScreen(screenId) {
+            document.querySelectorAll('#section-mainpath .screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function mpResetPrototype() {
+            mpSelectedActivity = null;
+            mpSelectedStyle = null;
+            document.getElementById('mp-btn-trekking').classList.remove('selected');
+            document.getElementById('mp-btn-jeep').classList.remove('selected');
+            document.getElementById('mp-btn-light').classList.remove('selected');
+            document.getElementById('mp-btn-full').classList.remove('selected');
+            document.getElementById('mp-btn-generate').setAttribute('disabled', 'true');
+            mpNextScreen('mp-screen-ask');
+        }
+
+        function initMpStaticCheckboxes() {
+            document.querySelectorAll('#section-mainpath .checklist-scroll .item-checkbox').forEach(box => {
+                box.onclick = function() {
+                    this.classList.toggle('checked');
+                    if (this.classList.contains('checked')) {
+                        this.innerHTML = '✓';
+                    } else {
+                        this.innerHTML = '';
+                    }
+                };
+            });
+        }
+
+        function mpOpenPrefModal() {
+            document.getElementById('mp-pref-modal').style.display = 'flex';
+        }
+
+        function mpSavePreference(confirm) {
+            const isOptedIn = document.getElementById('mp-pref-optin').checked;
+            document.getElementById('mp-pref-modal').style.display = 'none';
+            
+            if (confirm && isOptedIn) {
+                mpShowToast("AI đã ghi nhớ thói quen này cho các chuyến đi trekking sau!", false);
+            } else if (confirm && !isOptedIn) {
+                mpShowToast("Đã bỏ chọn. Thói quen chưa được ghi nhớ (để bảo mật riêng tư).", true);
+            } else {
+                mpShowToast("Đã hủy bỏ thiết lập.", false);
+            }
+            document.getElementById('mp-pref-optin').checked = false;
+        }
+
+        function mpShowToast(msg, showUndo = false) {
+            const toast = document.getElementById('mp-toast');
+            if (showUndo) {
+                toast.innerHTML = msg + ` <a href="#" onclick="mpUndoLastAction(event)" style="color: #000; text-decoration: underline; margin-left: 8px; font-weight: 800;">[Hoàn tác]</a>`;
+            } else {
+                toast.innerText = msg;
+            }
+            toast.classList.add('show');
+            if (mpToastTimeout) clearTimeout(mpToastTimeout);
+            mpToastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 5000);
+        }
+
+        function mpUndoLastAction(e) {
+            if (e) e.preventDefault();
+            if (!mpLastAction) return;
+
+            if (mpLastAction.type === 'uncheck-shoes') {
+                const boxes = document.querySelectorAll('#mp-dynamic-items .item-checkbox');
+                boxes.forEach(box => {
+                    if (box.nextElementSibling && box.nextElementSibling.innerText.includes('Giày leo núi')) {
+                        box.classList.add('checked');
+                        box.innerHTML = '✓';
+                    }
+                });
+                mpShowToast("Đã hoàn tác (khôi phục tích chọn Giày leo núi)!");
+            }
+            mpLastAction = null;
+        }
+
+
+        /* ========================================================
+           3. FAILURE & RECOVERY JAVASCRIPT
+           ======================================================== */
+        let recLastAction = null;
+        let recToastTimeout = null;
+
+        function recSwitchScenario(type) {
+            document.querySelectorAll('#section-recovery .tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('#section-recovery .screen').forEach(s => s.classList.remove('active'));
+
+            document.getElementById(`rec-tab-${type}`).classList.add('active');
+            document.getElementById(`rec-screen-${type}`).classList.add('active');
+        }
+
+        function recApplyWeatherRecovery() {
+            document.getElementById('rec-item-sunscreen').classList.add('removed');
+            document.getElementById('rec-item-shorts').classList.add('removed');
+
+            const itemsList = document.getElementById('rec-weather-items');
+            
+            // Clear any previously added items
+            const existingAdded = document.querySelectorAll('#rec-weather-items .added');
+            existingAdded.forEach(item => item.remove());
+            
+            const itemJacket = document.createElement('div');
+            itemJacket.className = 'item-row added';
+            itemJacket.innerHTML = '<div class="checkbox checked">✓</div><div class="item-name">Áo phao giữ nhiệt siêu ấm 🧥 (AI Thêm)</div>';
+
+            const itemRaincoat = document.createElement('div');
+            itemRaincoat.className = 'item-row added';
+            itemRaincoat.innerHTML = '<div class="checkbox checked">✓</div><div class="item-name">Áo gió chống nước (Gore-Tex) & Áo mưa</div>';
+
+            const itemGlove = document.createElement('div');
+            itemGlove.className = 'item-row added';
+            itemGlove.innerHTML = '<div class="checkbox checked">✓</div><div class="item-name">Găng tay len & Túi sưởi cầm tay</div>';
+
+            itemsList.appendChild(itemJacket);
+            itemsList.appendChild(itemRaincoat);
+            itemsList.appendChild(itemGlove);
+
+            document.getElementById('rec-weather-alert').style.display = 'none';
+
+            recLastAction = { type: 'weather' };
+            recShowToast("Đã khôi phục: Đã chuyển đổi sang danh sách đồ ấm!", true);
+        }
+
+        function recIgnoreWeatherAlert() {
+            document.getElementById('rec-weather-alert').style.display = 'none';
+            recLastAction = { type: 'weather-ignore' };
+            recShowToast("Đã ẩn cảnh báo thời tiết.", true);
+        }
+
+        function recOptimizeFlightWeight() {
+            document.getElementById('rec-flight-item-knife').style.display = 'none';
+            document.getElementById('rec-flight-item-pole').style.display = 'none';
+
+            document.getElementById('rec-flight-item-tent').classList.add('removed');
+            document.getElementById('rec-flight-item-tent').querySelector('.item-name').innerText = "Lều cắm trại (Chuyển sang thuê tại Đà Lạt)";
+            
+            document.getElementById('rec-flight-item-sleepingbag').classList.add('removed');
+            document.getElementById('rec-flight-item-sleepingbag').querySelector('.item-name').innerText = "Túi ngủ (Chuyển sang thuê tại Đà Lạt)";
+
+            const fill = document.getElementById('rec-weight-bar');
+            fill.className = 'weight-bar-fill safe';
+            fill.style.width = '65%'; // 4.5kg / 7kg
+
+            const label = document.getElementById('rec-weight-label');
+            label.innerText = '4.5 kg (An toàn ✓)';
+            label.style.color = 'var(--success)';
+
+            document.getElementById('rec-weight-alert').style.display = 'none';
+
+            recLastAction = { type: 'weight' };
+            recShowToast("Đã khôi phục: Đã loại bỏ đồ cấm & chuyển Lều sang thuê ngoài!", true);
+        }
+
+        function recBuyCheckinWeight() {
+            const fill = document.getElementById('rec-weight-bar');
+            fill.className = 'weight-bar-fill safe';
+            fill.style.width = '61%'; // 12.2kg / 20kg
+
+            const label = document.getElementById('rec-weight-label');
+            label.innerText = '12.2 kg / Hạn mức 20kg (An toàn ✓)';
+            label.style.color = 'var(--success)';
+
+            document.getElementById('rec-weight-alert').style.display = 'none';
+
+            recLastAction = { type: 'weight-buy' };
+            recShowToast("Đã mở rộng hạn mức ký gửi lên 20kg thành công!", true);
+        }
+
+        function recShowToast(msg, showUndo = false) {
+            const toast = document.getElementById('rec-toast');
+            if (showUndo) {
+                toast.innerHTML = msg + ` <a href="#" onclick="recUndoLastAction(event)" style="color: #000; text-decoration: underline; margin-left: 8px; font-weight: 800;">[Hoàn tác]</a>`;
+            } else {
+                toast.innerText = msg;
+            }
+            toast.classList.add('show');
+            if (recToastTimeout) clearTimeout(recToastTimeout);
+            recToastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 5000);
+        }
+
+        function recUndoLastAction(e) {
+            if (e) e.preventDefault();
+            if (!recLastAction) return;
+
+            if (recLastAction.type === 'weather') {
+                document.getElementById('rec-item-sunscreen').classList.remove('removed');
+                document.getElementById('rec-item-shorts').classList.remove('removed');
+                const addedItems = document.querySelectorAll('#rec-weather-items .added');
+                addedItems.forEach(item => item.remove());
+                document.getElementById('rec-weather-alert').style.display = 'flex';
+                recShowToast("Đã hoàn tác cập nhật thời tiết!");
+            } else if (recLastAction.type === 'weather-ignore') {
+                document.getElementById('rec-weather-alert').style.display = 'flex';
+                recShowToast("Đã hiển thị lại cảnh báo thời tiết!");
+            } else if (recLastAction.type === 'weight') {
+                document.getElementById('rec-flight-item-knife').style.display = 'flex';
+                document.getElementById('rec-flight-item-pole').style.display = 'flex';
+                
+                const tent = document.getElementById('rec-flight-item-tent');
+                tent.classList.remove('removed');
+                tent.querySelector('.item-name').innerText = "Lều cắm trại cá nhân (3.5kg)";
+                
+                const sleepingbag = document.getElementById('rec-flight-item-sleepingbag');
+                sleepingbag.classList.remove('removed');
+                sleepingbag.querySelector('.item-name').innerText = "Túi ngủ ấm (1.5kg)";
+
+                const fill = document.getElementById('rec-weight-bar');
+                fill.className = 'weight-bar-fill';
+                fill.style.width = '100%';
+
+                const label = document.getElementById('rec-weight-label');
+                label.innerText = '12.2 kg (Quá tải ⚠️)';
+                label.style.color = 'var(--danger)';
+
+                document.getElementById('rec-weight-alert').style.display = 'flex';
+                recShowToast("Đã hoàn tác tối ưu hóa cân nặng!");
+            } else if (recLastAction.type === 'weight-buy') {
+                const fill = document.getElementById('rec-weight-bar');
+                fill.className = 'weight-bar-fill';
+                fill.style.width = '100%';
+
+                const label = document.getElementById('rec-weight-label');
+                label.innerText = '12.2 kg (Quá tải ⚠️)';
+                label.style.color = 'var(--danger)';
+
+                document.getElementById('rec-weight-alert').style.display = 'flex';
+                recShowToast("Đã hoàn tác thay đổi hạn mức ký gửi!");
+            }
+            recLastAction = null;
+        }
+
+        function initRecCheckboxes() {
+            document.querySelectorAll('#section-recovery .items-list').forEach(list => {
+                list.onclick = function(e) {
+                    const row = e.target.closest('.item-row');
+                    if (row && !row.classList.contains('removed')) {
+                        const checkbox = row.querySelector('.checkbox');
+                        checkbox.classList.toggle('checked');
+                        checkbox.innerHTML = checkbox.classList.contains('checked') ? '✓' : '';
+                    }
+                };
+            });
+        }
+
+
+        /* ========================================================
+           4. FEEDBACK MATRIX JAVASCRIPT
+           ======================================================== */
+        function fbHighlightFeedback(type) {
+            // Remove active on tags
+            document.querySelectorAll('#section-feedback .hcai-tag').forEach(tag => tag.classList.remove('active'));
+            // Remove highlighted on elements
+            document.querySelectorAll('#section-feedback .annotated-element').forEach(el => el.classList.remove('highlighted'));
+            // Hide all detail cards
+            document.querySelectorAll('#section-feedback .detail-card').forEach(card => card.classList.remove('active'));
+
+            // Set active tag
+            const tagMap = {
+                'sys-exp': 'system-explicit',
+                'sys-imp': 'system-implicit',
+                'user-exp': 'user-explicit',
+                'user-imp': 'user-implicit'
+            };
+            const currentTag = document.querySelector(`#section-feedback .hcai-tag.${tagMap[type]}`);
+            if (currentTag) currentTag.classList.add('active');
+            
+            // Highlight mockup area
+            document.getElementById(`fb-ui-${type}`).classList.add('highlighted');
+            // Show details card on right
+            document.getElementById(`fb-card-${type}`).classList.add('active');
+        }
+    </script>
+</body>
+</html>

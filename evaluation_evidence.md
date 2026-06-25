@@ -1,6 +1,6 @@
 # Dẫn Chứng Đánh Giá (Evaluation Evidence)
 
-Dưới đây là các dẫn chứng cụ thể (trích xuất từ `day20_analytics.md` và `index.html`) chứng minh bài làm đã đáp ứng đầy đủ các tiêu chí trong Checklist:
+Dưới đây là các dẫn chứng cụ thể (trích xuất từ `day20_report.md` và `index.html`) chứng minh bài làm đã đáp ứng đầy đủ các tiêu chí trong Checklist:
 
 ### 1. Use case và natural behavior
 *   **[x] Chỉ tập trung vào một use case chính:**
