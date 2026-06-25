@@ -4,7 +4,7 @@
 **Thành viên nhóm:**
 1. Nguyễn Ngọc Duy - 2A202600980
 2. Nguyễn Huy Bảo - 2A202600998
-3. Trần Ngọc Thủy - 2A202600799
+3. Trần Ngọc Thụy - 2A202600799
 **Chủ đề:** AI Gợi ý hành trang theo thời tiết và hoạt động (Smart Packing & Prep)
 **Track áp dụng:** AI Travel Planner
 
