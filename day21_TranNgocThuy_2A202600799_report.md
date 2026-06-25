@@ -1,8 +1,5 @@
 # Day 21 - Phụ Lục Scenario Dataset v0 Cá Nhân
 
-Tài liệu này chỉ giữ phần Scenario Dataset v0 cá nhân của **Trần Ngọc Thụy - 2A202600799**.
----
-
 ## Trần Ngọc Thụy - 2A202600799
 
 ### User Input Grid
