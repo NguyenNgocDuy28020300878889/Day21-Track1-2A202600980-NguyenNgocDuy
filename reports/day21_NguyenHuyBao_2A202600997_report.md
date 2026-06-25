@@ -26,11 +26,11 @@
 
 | Câu hỏi | Câu trả lời |
 | :--- | :--- |
-| **Quality question chính** | Trong lát cắt gợi ý hành trang, Agent có tạo danh sách đồ dùng bám sát đúng sự thay đổi thời tiết, hoạt động thực tế và các quy định khắt khe về giới hạn hành lý của chuyến bay mà không tự ý quyết định thay quyền của người dùng hay không? |
-| **Vì sao câu hỏi này quan trọng với user?** | Hành lý là yếu tố sống còn cho chuyến đi. Nếu AI gợi ý sai, người dùng có thể bị phạt tại sân bay (quá cân xách tay) hoặc gặp nguy hiểm/khó chịu do thời tiết cực đoan (thiếu đồ ấm/áo mưa). Đồng thời, nếu AI tự ý thanh toán mua đồ, user sẽ mất tiền oan và mất trust vào app. |
-| **Nếu agent fail ở đây, hậu quả là gì?** | User bị phạt tiền hành lý, bị chặn lại ở cửa an ninh, gặp trải nghiệm tồi tệ trong chuyến đi, tốn chi phí phát sinh vô lý, dẫn đến xóa app. |
-| **Behavior nào là bắt buộc?** | Cảnh báo ngay lập tức (hiển thị màu đỏ) nếu vi phạm trọng lượng hành lý hoặc có cảnh báo thời tiết khắc nghiệt. Phải hỏi ý kiến (Ask) trước khi thực hiện hành động rủi ro cao. |
-| **Behavior nào bị cấm?** | Tuyệt đối cấm tự động thanh toán (Act) các món đồ được gợi ý. Cấm tự động xoá toàn bộ đồ đạc mà không cung cấp nút Hoàn tác (Undo). |
+| **Quality question chính** | Khi gợi ý hành lý cho các chuyến đi có thời tiết phức tạp, Agent có khả năng phân biệt rõ ràng giữa "vật dụng bắt buộc" và "vật dụng tùy chọn", giúp người dùng không bị choáng ngợp bởi một checklist quá dài dẫn đến nguy cơ quá tải hành lý hay không? |
+| **Vì sao câu hỏi này quan trọng với user?** | Người dùng sử dụng AI để tiết kiệm thời gian (Low brain cycles). Nếu AI sinh ra một checklist dài lê thê và nhồi nhét, người dùng sẽ phải tốn công ngồi chọn lọc lại từ đầu, làm mất đi giá trị cốt lõi của ứng dụng. |
+| **Nếu agent fail ở đây, hậu quả là gì?** | Checklist quá dài khiến người dùng mang lố định mức hành lý xách tay (7kg), dẫn đến việc bị phạt tiền tại sân bay, hoặc mang vác cồng kềnh. Trải nghiệm tồi tệ sẽ khiến user rời bỏ ứng dụng. |
+| **Behavior nào là bắt buộc?** | Phải phân nhóm rõ ràng mức độ ưu tiên của đồ đạc (ví dụ: Bắt buộc, Khuyên dùng do thời tiết, Tùy chọn). Liên tục hiển thị thanh dự báo trọng lượng khi thêm đồ vào list. |
+| **Behavior nào bị cấm?** | Cấm liệt kê dàn trải hàng loạt đồ đạc không quan trọng vào chung nhóm với đồ thiết yếu mà không có sự phân loại. Cấm tự động thêm đồ vượt quá ngưỡng cân nặng an toàn mà không có cảnh báo. |
 
 ---
 

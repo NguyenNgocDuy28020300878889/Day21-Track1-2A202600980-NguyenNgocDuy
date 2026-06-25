@@ -455,6 +455,101 @@
             border-color: var(--primary);
             color: #000;
         }
+
+        /* Tracking Toast Console */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        
+        .toast {
+            background: rgba(10, 10, 20, 0.9);
+            border-left: 4px solid var(--primary);
+            color: #4ade80;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            animation: slideIn 0.3s ease forwards, fadeOut 0.5s ease 4.5s forwards;
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+        
+        .toast.metric-star {
+            border-left-color: #f59e0b;
+            color: #fcd34d;
+            font-weight: bold;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        /* Simulate Tool Panel */
+        .simulate-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(15, 15, 27, 0.8);
+            border: 1px solid var(--glass-border);
+            padding: 15px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+        
+        .simulate-btn {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #ef4444;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        .simulate-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Notification Banner */
+        .notification-banner {
+            position: absolute;
+            top: -60px;
+            left: 10px;
+            right: 10px;
+            background: rgba(239, 68, 68, 0.95);
+            color: white;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 50;
+        }
+        
+        .notification-banner.show {
+            top: 40px;
+        }
     </style>
 </head>
 <body>
@@ -490,7 +585,7 @@
                 </div>
 
                 <div class="btn-container">
-                    <button class="btn" onclick="nextScreen('screen-permissions')">Bắt đầu thiết lập</button>
+                    <button class="btn" onclick="startTripCreation()">Bắt đầu thiết lập</button>
                 </div>
             </div>
 
@@ -578,15 +673,129 @@
 
                 <div class="btn-container" style="margin-top: 15px;">
 
-                    <button class="btn" onclick="alert('Đã lưu checklist thành công!')">Xác nhận checklist (Core Action)</button>
+                    <button class="btn" onclick="finalizeChecklist()">Xác nhận checklist (Core Action)</button>
                     <button class="btn btn-secondary" onclick="nextScreen('screen-input')">Làm lại</button>
+                </div>
+            </div>
+
+            <!-- Smart Notification Banner for Recovery -->
+            <div id="smart-notification" class="notification-banner">
+                <span style="font-size: 18px;">⚠️</span>
+                <div>
+                    <div style="font-weight: bold;">Cảnh báo: Bão đổ bộ Đà Lạt!</div>
+                    <div style="font-size: 11px; opacity: 0.9;">AI đã tự động thêm áo mưa và cập nhật checklist.</div>
                 </div>
             </div>
 
         </div>
     </div>
 
+    <!-- Simulate Control Panel outside phone mockup -->
+    <div class="simulate-panel">
+        <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 13px;">Công cụ Kiểm thử</h4>
+        <button class="simulate-btn" onclick="simulateWeatherChange()">Giả lập: Bão đổ bộ Đà Lạt</button>
+    </div>
+
+    <!-- Toast Container for Tracking Metric Logs -->
+    <div id="toast-container"></div>
+
     <script>
+        // Tracking System Mock
+        function trackEvent(eventName, properties) {
+            console.log(`[TRACKING] ${eventName}`, properties);
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            if(eventName === 'checklist_finalized') {
+                toast.classList.add('metric-star');
+            }
+            
+            let propsString = Object.entries(properties).map(([k,v]) => `${k}: ${v}`).join('<br>');
+            toast.innerHTML = `<strong>📡 Event: ${eventName}</strong><br><span style="color:#a1a1aa;">${propsString}</span>`;
+            
+            toastContainer.appendChild(toast);
+            
+            // Remove after animation ends (5s total)
+            setTimeout(() => {
+                if(toast.parentElement) toast.remove();
+            }, 5000);
+        }
+
+        function startTripCreation() {
+            nextScreen('screen-input');
+            trackEvent('trip_creation_started', {
+                user_id: 'USR-2026-0980',
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        function finalizeChecklist() {
+            alert('Đã lưu checklist thành công!');
+            trackEvent('checklist_finalized', {
+                total_items: document.querySelectorAll('.checklist-item').length,
+                ai_accuracy_score: '95%'
+            });
+        }
+
+        function simulateWeatherChange() {
+            // Show Smart Notification
+            const banner = document.getElementById('smart-notification');
+            banner.classList.add('show');
+            setTimeout(() => {
+                banner.classList.remove('show');
+            }, 4000);
+
+            // Dynamically add Recovery items to Checklist
+            const itemList = document.querySelector('.item-list');
+            
+            const recoveryBlock = document.createElement('div');
+            recoveryBlock.innerHTML = `
+                <div class="category-title" style="color: #ef4444; margin-top: 15px;">D. Recovery (Cập nhật do Bão)</div>
+                <div class="checklist-item" style="border-color: rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.05);">
+                    <div class="checkbox"></div>
+                    <span>Áo mưa bộ chuyên dụng 🌧️</span>
+                </div>
+                <div class="checklist-item" style="border-color: rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.05);">
+                    <div class="checkbox"></div>
+                    <span>Túi bọc balo chống nước 🎒</span>
+                </div>
+            `;
+            itemList.appendChild(recoveryBlock);
+
+            // Re-bind click event for new items
+            bindChecklistEvents();
+            
+            // Auto scroll to bottom
+            itemList.scrollTop = itemList.scrollHeight;
+        }
+
+        function bindChecklistEvents() {
+            // Unbind first to prevent double firing if we re-bind
+            document.querySelectorAll('.checklist-item').forEach(item => {
+                const newClone = item.cloneNode(true);
+                item.parentNode.replaceChild(newClone, item);
+                
+                newClone.addEventListener('click', function() {
+                    const checkbox = this.querySelector('.checkbox');
+                    checkbox.classList.toggle('checked');
+                    
+                    const actionType = checkbox.classList.contains('checked') ? 'checked' : 'unchecked';
+                    const itemName = this.querySelector('span').innerText;
+                    
+                    if (actionType === 'checked') {
+                        checkbox.innerHTML = '✓';
+                    } else {
+                        checkbox.innerHTML = '';
+                    }
+
+                    // Track item edit
+                    trackEvent('checklist_item_edited', {
+                        item_id: itemName.trim(),
+                        action_type: actionType
+                    });
+                });
+            });
+        }
         function nextScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
@@ -643,21 +852,15 @@
             // Navigate to Checklist
             setTimeout(() => {
                 nextScreen('screen-checklist');
+                trackEvent('trip_draft_generated', {
+                    destination: document.getElementById('dest-input').value,
+                    duration: document.getElementById('date-input').value
+                });
             }, 4500);
         }
 
-        // Toggle checkbox interaction on checklist screen
-        document.querySelectorAll('.checklist-item').forEach(item => {
-            item.addEventListener('click', function() {
-                const checkbox = this.querySelector('.checkbox');
-                checkbox.classList.toggle('checked');
-                if (checkbox.classList.contains('checked')) {
-                    checkbox.innerHTML = '✓';
-                } else {
-                    checkbox.innerHTML = '';
-                }
-            });
-        });
+        // Initial binding of checklist events
+        bindChecklistEvents();
     </script>
 </body>
 </html>
